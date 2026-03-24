@@ -769,7 +769,7 @@ body{background:linear-gradient(135deg,#f5f7fa 0%,#e9ecef 100%);min-height:100vh
 </div>
 <div class="quiz-interface" id="quiz-interface">
     <div class="quiz-header"><div class="header-title">🧪 ${title}</div><button class="view-overview" onclick="showOverview()">📊 View Overview</button></div>
-    <div class="timer-bar"><div class="timer-display">⏱️ <span id="timer">${Math.floor(timeLimit/60)}:00</span></div><button class="submit-btn" onclick="submitQuiz()">Submit Quiz</button></div>
+    <div class="timer-bar"><div class="timer-display">⏱️ <span id="timer">${Math.floor(timeLimit/60)}:00</span></div><button class="submit-btn" onclick="submitQuizWithConfirm()">Submit Quiz</button></div>
     <div class="container" id="quiz-container"></div>
     <div class="nav-footer"><div class="nav-link" onclick="changeQuestion(-1)">◀ PREV</div><button class="mark-btn" id="markBtn" onclick="toggleMark()">⭐ MARK</button><div class="q-count"><span id="curr-num">1</span>/<span id="total-q">${data.length}</span></div><div class="nav-link" onclick="changeQuestion(1)">NEXT ▶</div></div>
     <div class="overlay" id="overlay" onclick="if(event.target===this)closeOverview()"><div class="overview-modal"><div class="modal-header"><h3>📋 Quiz Overview</h3><button class="close-modal" onclick="closeOverview()">×</button></div><div class="modal-body"><div class="stats-row"><div class="stat-badge answered"><div class="stat-number" id="overview-answered">0</div><div>ANSWERED</div></div><div class="stat-badge marked"><div class="stat-number" id="overview-marked">0</div><div>MARKED</div></div><div class="stat-badge pending"><div class="stat-number" id="overview-pending">${data.length}</div><div>PENDING</div></div><div class="stat-badge visited"><div class="stat-number" id="overview-visited">0</div><div>VISITED</div></div></div><h4>Questions</h4><div class="question-grid-overview" id="overview-grid"></div></div></div></div>
@@ -889,6 +889,12 @@ function startTimer(){
     }, 1000);
 }
 
+function submitQuizWithConfirm() {
+    if(confirm("⚠️ Are you sure you want to submit the quiz?\\nYour answers will be finalized and you cannot change them.")) {
+        submitQuiz();
+    }
+}
+
 function submitQuiz(){
     if(timerInterval) clearInterval(timerInterval);
     var correct=0, incorrect=0, skipped=0;
@@ -921,17 +927,23 @@ function submitQuiz(){
         var qLines = item.question.split('\\n');
         var qText = qLines[0];
         var opts = qLines.slice(1).join('<br>');
-        tableRows += '|<td>'+(i+1)+'</td><td><strong>'+qText+'</strong><div style="font-size:0.85rem;margin-top:6px;">'+opts+'</div></td><td class="'+(userAns?(isCorrect?'correct-answer':'incorrect-answer'):'')+'">'+ansHtml+'</td><td>'+reviewHtml+'</td><td class="'+marksClass+'">'+marksHtml+'</td></tr>';
+        tableRows += '<tr><td>'+(i+1)+'</td><td><strong>'+qText+'</strong><div style="font-size:0.85rem;margin-top:6px;">'+opts+'</div></td><td class="'+(userAns?(isCorrect?'correct-answer':'incorrect-answer'):'')+'">'+ansHtml+'</td><td>'+reviewHtml+'</td><td class="'+marksClass+'">'+marksHtml+'</td></tr>';
     }
     var timeTaken = ${timeLimit} - timeLeft;
     var takenMin = Math.floor(timeTaken/60);
     var takenSec = timeTaken%60;
-    var resultHTML = '<div class="result-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;"><div><div style="font-size:1.8rem;font-weight:bold;"># Detailed Result</div><div style="color:#4a6fa5;">${title}</div></div><div><button class="restart-btn" onclick="location.reload()">🔄 Restart Quiz</button><button class="print-btn" onclick="window.print()">🖨️ Print Report</button></div></div><div class="score-big">'+totalMarks+' / '+maxMarks+'</div><div class="grade">Grade: '+grade+'</div><div class="stats-table"><div class="stat-cell correct"><div class="stat-value">'+correct+'</div><div>CORRECT</div></div><div class="stat-cell incorrect"><div class="stat-value">'+incorrect+'</div><div>INCORRECT</div></div><div class="stat-cell skipped"><div class="stat-value">'+skipped+'</div><div>SKIPPED</div></div></div><div class="net-score-row"><span><strong>NET SCORE</strong></span><span class="value">'+totalMarks+'</span></div><div class="net-score-row" style="background:#fff3cd;"><span><strong>PERCENTAGE</strong></span><span class="value">'+pct+'%</span></div><div class="net-score-row"><span><strong>MARKED FOR REVIEW</strong></span><span class="value">'+Object.keys(markedQuestions).length+'</span></div><div class="net-score-row"><span><strong>TIME TAKEN</strong></span><span class="value">'+takenMin+':'+(takenSec<10?'0'+takenSec:takenSec)+'</span></div><table class="question-table"><thead><tr><th>Sr No.</th><th>Question</th><th>Answer</th><th>Review</th><th>Marks</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
+    var resultHTML = '<div class="result-card"><div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:20px;flex-wrap:wrap;"><div><div style="font-size:1.8rem;font-weight:bold;"># Detailed Result</div><div style="color:#4a6fa5;">${title}</div></div><div><button class="restart-btn" onclick="restartWithConfirm()">🔄 Restart Quiz</button><button class="print-btn" onclick="window.print()">🖨️ Print Report</button></div></div><div class="score-big">'+totalMarks+' / '+maxMarks+'</div><div class="grade">Grade: '+grade+'</div><div class="stats-table"><div class="stat-cell correct"><div class="stat-value">'+correct+'</div><div>CORRECT</div></div><div class="stat-cell incorrect"><div class="stat-value">'+incorrect+'</div><div>INCORRECT</div></div><div class="stat-cell skipped"><div class="stat-value">'+skipped+'</div><div>SKIPPED</div></div></div><div class="net-score-row"><span><strong>NET SCORE</strong></span><span class="value">'+totalMarks+'</span></div><div class="net-score-row" style="background:#fff3cd;"><span><strong>PERCENTAGE</strong></span><span class="value">'+pct+'%</span></div><div class="net-score-row"><span><strong>MARKED FOR REVIEW</strong></span><span class="value">'+Object.keys(markedQuestions).length+'</span></div><div class="net-score-row"><span><strong>TIME TAKEN</strong></span><span class="value">'+takenMin+':'+(takenSec<10?'0'+takenSec:takenSec)+'</span></div><table class="question-table"><thead><tr><th>Sr No.</th><th>Question</th><th>Answer</th><th>Review</th><th>Marks</th></tr></thead><tbody>'+tableRows+'</tbody></table></div>';
     document.querySelector('.timer-bar').style.display='none';
     document.querySelector('.nav-footer').style.display='none';
     document.querySelector('.quiz-header').style.display='none';
     document.getElementById('quiz-container').innerHTML = resultHTML;
     closeOverview();
+}
+
+function restartWithConfirm() {
+    if(confirm("⚠️ Are you sure you want to restart?\\nAll your progress will be lost.")) {
+        location.reload();
+    }
 }
 
 document.addEventListener('keydown',function(e){ if(document.querySelector('.result-card'))return; if(e.key==='ArrowLeft')changeQuestion(-1); if(e.key==='ArrowRight')changeQuestion(1); });
